@@ -13,30 +13,39 @@ jobs:
           cp -r extracted_files/* . || true
           cp -r extracted_files/.* . || true
 
-      # ২. জাভা ১৭ সেটআপ (গ্র্যাডেল রান করার জন্য এটি দরকার)
+      # ২. জাভা ১৭ সেটআপ
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # ৩. গিটহাবের অফিশিয়াল গ্র্যাডেল সেটআপ টুল (যা নিজে থেকেই সঠিক ম্যাচিং ফাইল তৈরি করে নেবে)
+      # ৩. মিসিং ডেবাগ কি-স্টোর ফাইলটি সার্ভারে অটো-জেনারেট করা
+      - name: Generate Debug Keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          # প্রজেক্ট রুট এবং সাব-ফোল্ডারেও কপি করে দেওয়া যেন কোনোভাবেই মিস না হয়
+          cp ~/.android/debug.keystore .
+          cp ~/.android/debug.keystore ./app/ || true
+
+      # ৪. গিটহাবের অফিশিয়াল গ্র্যাডেল সেটআপ টুল
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.2
 
-      # ৪. ফ্রেস পারমিশন সেটআপ
+      # ৫. গ্র্যাডেল র‍্যাপার তৈরি ও পারমিশন
       - name: Grant Execute Permission for Gradlew
         run: |
           gradle wrapper --gradle-version 8.2
           chmod +x gradlew
 
-      # ৫. অ্যাপ বিল্ড করা
+      # ৬. অ্যাপ বিল্ড করা
       - name: Build APK
         run: ./gradlew assembleDebug
 
-      # ৬. তৈরি হওয়া APK ফাইলটি আপলোড করা
+      # ७. তৈরি হওয়া APK ফাইলটি আপলোড করা
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
