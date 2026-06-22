@@ -6,30 +6,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # জিপ ফাইল আনজিপ করা এবং ফাইলগুলোকে মেইন ফোল্ডারে আনা
+      # ১. জিপ ফাইল আনজিপ করে সব ফাইল মেইন ডিরেক্টরিতে আনা
       - name: Unzip Source Code
         run: |
           unzip secure-share.zip -d extracted_files
           cp -r extracted_files/* . || true
           cp -r extracted_files/.* . || true
 
-      - name: set up JDK 17
+      # ২. আপনার প্রজেক্টের জন্য পারফেক্ট জাভা ১১ সেটআপ করা
+      - name: set up JDK 11
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'temurin'
 
-      # gradlew ফাইল মিসিং থাকলে গিটহাব নিজেই নতুন ফাইল বানিয়ে নেবে
-      - name: Validate Gradle Wrapper
+      # ৩. প্রজেক্টের সাথে ম্যাচিং গ্র্যাডেল ভার্সন দিয়ে র‍্যাপার তৈরি করা
+      - name: Generate Gradle Wrapper
         run: |
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper
-          fi
+          gradle wrapper --gradle-version 7.5
           chmod +x gradlew
 
+      # ৪. অ্যাপ বিল্ড করা
       - name: Build APK
         run: ./gradlew assembleDebug
 
+      # ৫. তৈরি হওয়া APK ফাইলটি আপলোড করা
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
